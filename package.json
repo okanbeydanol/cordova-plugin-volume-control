@@ -1,0 +1,29 @@
+{
+  "name": "cordova-plugin-volume-control",
+  "version": "0.1.8",
+  "description": "Cordova Volume Control Plugin",
+  "cordova": {
+    "id": "cordova-plugin-volume-control",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okanbeydanol/cordova-plugin-volume-control"
+  },
+  "keywords": [
+    "cordova",
+    "unity",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-android"
+  ],
+  "engines": {
+      "cordova-ios": ">=3.6.0",
+      "cordova-android": ">=3.0.0"
+    },
+  "author": "Okan Beydanol <okan.beydanol@gmail.com>",
+  "license": "MIT"
+}
