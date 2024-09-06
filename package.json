@@ -15,15 +15,14 @@
   },
   "keywords": [
     "cordova",
-    "unity",
-    "ecosystem:cordova",
-    "cordova-ios",
-    "cordova-android"
+    "volume",
+    "plugin"
   ],
   "engines": {
-      "cordova-ios": ">=3.6.0",
-      "cordova-android": ">=3.0.0"
-    },
+    "cordova-ios": ">=3.6.0",
+    "cordova-android": ">=3.0.0"
+  },
+  "main": "www/VolumeControl.js",
   "author": "Okan Beydanol <okan.beydanol@gmail.com>",
   "license": "MIT"
 }

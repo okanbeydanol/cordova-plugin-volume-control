@@ -2,8 +2,6 @@
 
 This plugin provides a simple way to interact with the volume of your `UIWebView`.
 
-* This plugin uses private `AVSystemController.h` APIs and can't be used for AppStore apps.
-
 * This plugin is built for `cordova@^3.6`.
 
 * This plugin currently supports Android and iOS.
@@ -16,15 +14,21 @@ Using this plugin requires [Cordova iOS](https://github.com/apache/cordova-ios) 
 1. `cordova plugin add cordova-plugin-volume-control`--save
 
 
-## Javascript interface
 
-    // After device ready, create a local alias
+### Usage
+
+After the device is ready, you can create a local alias for the `VolumeControl` class:
+
+
+```javascript
+## Javascript interface
     var VolumeControl = cordova.plugins.VolumeControl;
 
     VolumeControl.getVolume(console.log.bind(console));
     VolumeControl.toggleMute();
     VolumeControl.isMuted(console.log.bind(console));
     VolumeControl.setVolume(1.0); //Float between 0.0 and 1.0
+```
 
 * Check [source](https://github.com/okanbeydanol/cordova-plugin-volume-control/tree/master/www/VolumeControl.js) for additional configuration.
 
@@ -44,23 +48,11 @@ Patches welcome! Send a pull request. Since this is not a part of Cordova Core (
 
 Please submit all pull requests the against master branch. If your pull request contains JavaScript patches or features, you should include relevant unit tests. Thanks!
 
-
-## Authors
-
-**José Lorente**
-**Olivier Louvignes**
-**Manuel Simpson**
-
-+ http://github.com/jlorente
-+ http://github.com/mgcrea
-+ http://github.com/manusimpson
-
-
 ## Copyright and license
 
     The MIT License (MIT)
 
-    Copyright (c) 2017 José Lorente
+    Copyright (c) 2024 Okan Beydanol
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

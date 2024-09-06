@@ -1,30 +1,23 @@
-var exec = require('cordova/exec');
+function VolumeControl() {}
 
-function defaults(object, source) {
-  if(!object) object = {};
-  for(var prop in source) {
-    if(typeof object[prop] === 'undefined') {
-      object[prop] = source[prop];
+VolumeControl.prototype.toggleMute = function(success, error) {
+    cordova.exec(success, error, 'VolumeControl', 'toggleMute', []);
+};
+
+VolumeControl.prototype.isMuted = function(success, error) {
+    cordova.exec(success, error, 'VolumeControl', 'isMuted', []);
+};
+
+VolumeControl.prototype.getVolume = function(success, error) {
+    cordova.exec(success, error, 'VolumeControl', 'getVolume', []);
+};
+
+VolumeControl.prototype.setVolume = function(volume, success, error) {
+    if (volume > 1) {
+        volume /= 100; // Normalize to 0-1 range
     }
-  }
-  return object;
-}
-
-exports.toggleMute = function( success, error) {
-  exec(success, error, 'VolumeControl', 'toggleMute', []);
+    cordova.exec(success, error, 'VolumeControl', 'setVolume', [volume]);
 };
 
-exports.isMuted = function(success, error) {
-  exec(success, error, 'VolumeControl', 'isMuted', []);
-};
-
-exports.getVolume = function(success, error) {
-  exec(success, error, 'VolumeControl', 'getVolume', []);
-};
-
-exports.setVolume = function(volume, success, error) {
-  if (volume > 1) {
-    volume /= 100;
-  }
-  exec(success, error, 'VolumeControl', 'setVolume', [volume * 1]);
-};
+// Export the VolumeControl class
+module.exports = new VolumeControl();
