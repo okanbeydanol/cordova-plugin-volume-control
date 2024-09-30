@@ -17,118 +17,116 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.content.Context;
-import android.media.AudioManager;
-import android.util.Log;
+import android.media.*;
 
 public class VolumeControl extends CordovaPlugin {
 
-    public static final String SET = "setVolume";
-    public static final String GET = "getVolume";
-    public static final String MUT = "toggleMute";
-    public static final String ISM = "isMuted";
+	public static final String SET = "setVolume";
+	public static final String GET = "getVolume";
+	public static final String MUT = "toggleMute";
+	public static final String ISM = "isMuted";
 
-    private static final String TAG = "VolumeControl";
+	private static final String TAG = "VolumeControl";
 
-    private Context context;
-    private AudioManager manager;
+	private Context context;
+	private AudioManager manager;
 
-    @Override
-    protected void pluginInitialize() {
-        context = cordova.getActivity().getApplicationContext();
-        manager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-    }
+	@Override
+	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+		boolean actionState = true;
+		context = cordova.getActivity().getApplicationContext();
+		manager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+		if (SET.equals(action)) {
+			try {
+				//Get the volume value to set
+				int volumeToSet = (int) Math.round(args.getDouble(0) * 100.0f);
+				int volume = getVolumeToSet(volumeToSet);
+				boolean play_sound;
 
-    @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        boolean actionState = true;
+				if (args.length() > 1 && !args.isNull(1)) {
+					play_sound = args.getBoolean(1);
+				} else {
+					play_sound = true;
+				}
 
-        switch (action) {
-            case SET:
-                setVolume(args, callbackContext);
-                break;
-            case GET:
-                getVolume(callbackContext);
-                break;
-            case MUT:
-                toggleMute(args, callbackContext);
-                break;
-            case ISM:
-                isMuted(callbackContext);
-                break;
-            default:
-                actionState = false;
-                break;
-        }
-        return actionState;
-    }
+				//Set the volume
+				manager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, (play_sound ? AudioManager.FLAG_PLAY_SOUND : 0));
+				callbackContext.success();
+			} catch (Exception e) {
+				LOG.d(TAG, "Error setting volume " + e);
+				actionState = false;
+			}
+		} else if(GET.equals(action)) {
+			try {
+				//Get current system volume
+				int _currVol = getCurrentVolume();
+				float currVol = _currVol / 100.0f;
+				String strVol= String.valueOf(currVol);
+				callbackContext.success(strVol);
+			} catch (Exception e) {
+				LOG.d(TAG, "Error setting volume " + e);
+				actionState = false;
+			}
+		} else if(MUT.equals(action)){
+			try{
+				//Mute or Unmute volume
+				int volume = getCurrentVolume();
+				float _volumeToSet = (float)args.getDouble(0);
+				int volumeToSet = (int)Math.round(_volumeToSet * 100.0f);
 
-    private void setVolume(JSONArray args, CallbackContext callbackContext) {
-        try {
-            int volumeToSet = (int) Math.round(args.getDouble(0) * 100.0f);
-            int volume = getVolumeToSet(volumeToSet);
-            boolean playSound = args.length() > 1 && !args.isNull(1) && args.getBoolean(1);
+				if(volume > 1){
+					// Mute: Set volume to 0
+					volume = 0;
+				} else {
+					// Unmute: Set volume to previous value
+					volume = getVolumeToSet(volumeToSet);
+				}
+				manager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_PLAY_SOUND);
+				callbackContext.success(volume);
 
-            manager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, playSound ? AudioManager.FLAG_PLAY_SOUND : 0);
-            callbackContext.success();
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting volume", e);
-            callbackContext.error("Error setting volume: " + e.getMessage());
-        }
-    }
+			} catch (Exception e) {
+				LOG.d(TAG, "Error setting mute/unmute " + e);
+				actionState = false;
+			}
+		} else if(ISM.equals(action)){
+			try{
+				//Mute or Unmute volume
+				int volume = getCurrentVolume();
+				callbackContext.success(volume == 0 ? 0 : 1);
+			} catch (Exception e) {
+				LOG.d(TAG, "Error checking mute volume " + e);
+				actionState = false;
+			}
+		} else {
+			actionState = false;
+		}
+		return actionState;
+	}
 
-    private void getVolume(CallbackContext callbackContext) {
-        try {
-            int currentVolume = getCurrentVolume();
-            float volume = currentVolume / 100.0f;
-            callbackContext.success(String.valueOf(volume));
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting volume", e);
-            callbackContext.error("Error getting volume: " + e.getMessage());
-        }
-    }
+	private int getVolumeToSet(int percent) {
+		try {
+			int volLevel;
+			int maxVolume = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+			volLevel = Math.round((percent * maxVolume) / 100);
 
-    private void toggleMute(JSONArray args, CallbackContext callbackContext) {
-        try {
-            int currentVolume = getCurrentVolume();
-            float volumeToSet = (float) args.getDouble(0);
-            int volume = (currentVolume > 1) ? 0 : getVolumeToSet((int) Math.round(volumeToSet * 100.0f));
+			return volLevel;
+		} catch (Exception e){
+			LOG.d(TAG, "Error getting VolumeToSet: " + e);
+			return 1;
+		}
+	}
 
-            manager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_PLAY_SOUND);
-            callbackContext.success(volume);
-        } catch (Exception e) {
-            Log.e(TAG, "Error toggling mute/unmute", e);
-            callbackContext.error("Error toggling mute/unmute: " + e.getMessage());
-        }
-    }
+	private int getCurrentVolume() {
+		try {
+			int volLevel;
+			int maxVolume = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+			int currSystemVol = manager.getStreamVolume(AudioManager.STREAM_MUSIC);
+			volLevel = Math.round((currSystemVol * 100) / maxVolume);
 
-    private void isMuted(CallbackContext callbackContext) {
-        try {
-            int currentVolume = getCurrentVolume();
-            callbackContext.success(currentVolume == 0 ? 0 : 1);
-        } catch (Exception e) {
-            Log.e(TAG, "Error checking mute status", e);
-            callbackContext.error("Error checking mute status: " + e.getMessage());
-        }
-    }
-
-    private int getVolumeToSet(int percent) {
-        try {
-            int maxVolume = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            return Math.round((percent * maxVolume) / 100);
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting volume to set", e);
-            return 1;
-        }
-    }
-
-    private int getCurrentVolume() {
-        try {
-            int maxVolume = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            int currentSystemVolume = manager.getStreamVolume(AudioManager.STREAM_MUSIC);
-            return Math.round((currentSystemVolume * 100) / maxVolume);
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting current volume", e);
-            return 1;
-        }
-    }
+			return volLevel;
+		} catch (Exception e) {
+			LOG.d(TAG, "Error getting CurrentVolume: " + e);
+			return 1;
+		}
+	}
 }
