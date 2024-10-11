@@ -31,6 +31,22 @@
     volumeView.hidden = YES;
     [self.webView addSubview:volumeView];
     previousVolume = -1.0;
+
+    // Add an observer for volume changes
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(volumeChanged:)
+                                                 name:@"AVSystemController_SystemVolumeDidChangeNotification"
+                                               object:nil];
+}
+
+// Method to handle volume change
+- (void)volumeChanged:(NSNotification *)notification {
+    DLog(@"Volume changed: %@", notification.userInfo);
+}
+
+// Make sure to remove the observer when the plugin is deallocated
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)toggleMute:(CDVInvokedUrlCommand*)command
@@ -106,9 +122,22 @@
     CDVPluginResult* pluginResult = nil;
     DLog(@"getVolume");
 
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    // Fetch volume from MPVolumeSlider instead of relying solely on AVAudioSession
+    UISlider* volumeSlider = nil;
+    for (UIView *view in [volumeView subviews]){
+        if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
+            volumeSlider = (UISlider*)view;
+            break;
+        }
+    }
 
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:audioSession.outputVolume];
+    if (volumeSlider != nil) {
+        float currentVolume = volumeSlider.value;
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:currentVolume];
+    } else {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Volume slider not found"];
+    }
+
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
