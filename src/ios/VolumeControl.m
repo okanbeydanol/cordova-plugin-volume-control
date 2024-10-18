@@ -120,7 +120,6 @@
 - (void)getVolume:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = nil;
-    DLog(@"getVolume");
 
     UISlider* volumeSlider = nil;
     for (UIView *view in [volumeView subviews]){
@@ -129,20 +128,24 @@
             break;
         }
     }
-
+    float currentVolume = 0.0;
     if (volumeSlider != nil) {
-        float currentVolume = volumeSlider.value;
-        
+        currentVolume = volumeSlider.value;
+
         // Fallback to AVAudioSession output volume if MPVolumeSlider returns 0.0 on the first call
-        if (currentVolume == 0.0 && previousVolume < 0) {
+        if (currentVolume == 0.0) {
             AVAudioSession *audioSession = [AVAudioSession sharedInstance];
             currentVolume = audioSession.outputVolume;
         }
 
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:currentVolume];
     } else {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Volume slider not found"];
+        currentVolume = 0.0;
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        currentVolume = audioSession.outputVolume;
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:currentVolume];
     }
+    NSLog(@"Current Volume: %f", currentVolume);
 
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
